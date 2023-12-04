@@ -1,15 +1,16 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-input = File.readlines('./test-input.txt').map(&:chomp)
+input = File.readlines('./input.txt').map(&:chomp)
 
 class Card
-  attr_accessor :id, :winning_numbers, :actual_numbers
+  attr_accessor :id, :winning_numbers, :actual_numbers, :card_count
 
   def initialize(id: nil, winning_numbers: [], actual_numbers: [])
     self.id = id
     self.winning_numbers = winning_numbers
     self.actual_numbers = actual_numbers
+    self.card_count = 1
   end
 
   def match_count
@@ -25,7 +26,7 @@ class Card
   end
 
   def to_s
-    "Card #{id}, matches: #{match_count}"
+    "Card #{id}, matches: #{match_count}, card_count: #{card_count}"
   end
 
   def self.parse(input)
@@ -42,24 +43,22 @@ class CardList
   attr_accessor :cards
 
   def initialize(input)
-    self.cards = input.map { |line| Card.parse(line) }.group_by(&:id)
+    self.cards = input.map { |line| Card.parse(line) }
   end
 
   def process
-    cards.keys.sort.each do |id|
-      cards[id].each do |card|
-        next if card.match_count.zero?
+    cards.each do |card|
+      next if card.match_count.zero?
 
-        (1..card.match_count).each do |offset|
-          copy_id = id + offset
-          cards[copy_id] << cards[copy_id].first.duplicate
-        end
+      (1..card.match_count).each do |offset|
+        copy_card = cards.find { |copy_card| copy_card.id == card.id + offset }
+        copy_card.card_count += card.card_count
       end
     end
   end
 
   def card_count
-    cards.values.map(&:size).sum
+    cards.map(&:card_count).sum
   end
 end
 
