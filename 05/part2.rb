@@ -30,6 +30,8 @@ class SeedRange
 
   def add_attribute(name, value)
     send(name) << value
+    send(name).sort_by! { |range| range.first }
+    send(name)
   end
 
   def self.parse_seeds(seed_line)
@@ -62,17 +64,34 @@ class Map
   def process_seed(seed)
     sources = seed.send(source)
 
-    sources.each do |source|
-      mapping = range_mappings.find { |mapping| mapping.includes_source?(source) }
+    mapped_sources = []
 
-      if mapping
-        seed.add_attribute(destination, mapping.destination(source))
-        mapping.unmapped_destinations(source).each do |unmapped_destination|
-          seed.add_attribute(destination, unmapped_destination)
+    sources.each do |source|
+      mappings = range_mappings.select { |mapping| mapping.includes_source?(source) }
+
+      if mappings.any?
+        mappings.each do |mapping|
+          seed.add_attribute(destination, mapping.destination(source))
+          mapped_sources << mapping.source_intersection(source)
         end
       else
         seed.add_attribute(destination, source)
+        mapped_sources << source
       end
+    end
+
+    min_source = sources.map(&:first).min
+    min_mapped_source = mapped_sources.map(&:first).min
+
+    if min_source < min_mapped_source
+      seed.add_attribute(destination, Range.new(min_source, min_mapped_source - 1))
+    end
+
+    max_source = sources.map(&:last).max
+    max_mapped_source = mapped_sources.map(&:last).max
+
+    if max_source > max_mapped_source
+      seed.add_attribute(destination, Range.new(max_mapped_source + 1, max_source))
     end
   end
 
