@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-input = File.readlines('./test-input.txt').map(&:chomp)
+input = File.readlines('./input.txt').map(&:chomp)
 
 class Hand
   include Comparable
@@ -42,7 +42,7 @@ class Hand
         :five_of_a_kind
       when 2
         card_counts = unique_cards.values
-  
+
         if card_counts.include?(4) || (card_counts.max + jokers) == 4
           :four_of_a_kind
         else
@@ -58,6 +58,9 @@ class Hand
         end
       when 4
         :one_pair
+      when 0
+        # All jokers
+        :five_of_a_kind
       else
         :high_card
       end
@@ -76,7 +79,7 @@ class Hand
       return result unless result.zero?
     end
 
-    0
+    result
   end
 end
 
