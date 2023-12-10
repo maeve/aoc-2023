@@ -11,6 +11,10 @@ class Node
     @code = code
   end
 
+  def start?
+    code.end_with?('A')
+  end
+
   def finish?
     code.end_with?('Z')
   end
@@ -36,14 +40,24 @@ while (node_line = input.shift)
   nodes[code].right = nodes[right]
 end
 
-count = 0
-current_nodes = nodes.values.select { |node| node.code.end_with?('A') }
+current_nodes = nodes.values.select(&:start?)
 
-until current_nodes.all?(&:finish?)
-  move = instructions.shift
-  current_nodes = move == 'L' ? current_nodes.map(&:left) : current_nodes.map(&:right)
-  instructions.push(move)
-  count += 1
+cycles = current_nodes.map do |node|
+  cycle = 0
+
+  until node.finish?
+    cycle += 1
+    instructions.each do |move|
+      if node.finish?
+        break
+      else
+        node = move == 'L' ? node.left : node.right
+      end
+    end
+  end
+
+  cycle * instructions.length
 end
 
+count = cycles.reduce(1, :lcm)
 puts "Answer: #{count}"
